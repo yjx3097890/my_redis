@@ -1,12 +1,15 @@
- 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, MutexGuard};
+mod sharded_db;
+
+ use std::sync::{Arc};
 
 use tokio::net::{TcpListener, TcpStream};
 use mini_redis::{Connection, Frame, Command};
 use bytes::Bytes;
 
-type Db = Arc<Mutex<HashMap<String, Bytes>>>;
+use sharded_db::ShardedDb;
+
+type ShardDb = Arc<ShardedDb>;
+
 
 
 #[tokio::main]
@@ -15,7 +18,7 @@ async fn main() {
 
     println!("Server is running on port 6378");
 
-    let db: Db = Arc::new(Mutex::new(HashMap::new()));
+    let db: ShardDb = Arc::new(ShardedDb::new(8));
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
@@ -29,7 +32,7 @@ async fn main() {
     }
 }
 
-async fn process(socket: TcpStream, db: Db) {
+async fn process(socket: TcpStream, db: ShardDb) {
 
     // Connection, provided by `mini-redis`, handles parsing frames from
     // the socket
@@ -39,14 +42,14 @@ async fn process(socket: TcpStream, db: Db) {
 
         let response = match Command::from_frame(frame).unwrap() {
             Command::Set(cmd) => {
-                let mut db: MutexGuard<HashMap<String, Bytes>> = db.lock().unwrap();
-                db.insert(cmd.key().to_string(), cmd.value().clone());
+                let mut map_db = db.get_shard(cmd.key()).lock().unwrap();
+                map_db.insert(cmd.key().to_string(), cmd.value().clone());
                 Frame::Simple("OK".to_string())
                  // MutexGuard 离开作用域，自动释放锁
             }
             Command::Get(cmd) => {
-                let db = db.lock().unwrap();
-                if let Some(value) = db.get(cmd.key()) {
+                let map_db = db.get_shard(cmd.key()).lock().unwrap();
+                if let Some(value) = map_db.get(cmd.key()) {
                     Frame::Bulk(Bytes::from(value.clone()))
                 } else {
                     Frame::Null

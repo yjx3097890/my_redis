@@ -1,15 +1,18 @@
-use tokio::task::yield_now;
-use std::rc::Rc;
+use std::sync::{Mutex, Arc};
+use tokio;
+use std::time::Duration;
+
 
 #[tokio::main]
 async fn main() {
-    tokio::spawn(async {
-        let rc = Rc::new("hello");
-
-        // `rc` is used after `.await`. It must be persisted to
-        // the task's state.
-        yield_now().await;
-
-        println!("{}", rc);
+    let data = Arc::new(Mutex::new(0));
+    
+    tokio::spawn(async move {
+        let mut num = data.lock().unwrap();
+        *num += 1;
+        
+        // ❌ 编译错误！
+      //  tokio::time::sleep(Duration::from_secs(1)).await;
+      
     });
 }
