@@ -1,18 +1,13 @@
-use std::sync::{Mutex, Arc};
-use tokio;
-use std::time::Duration;
-
+use tokio::io::{self, AsyncWriteExt};
+use tokio::fs::File;
 
 #[tokio::main]
-async fn main() {
-    let data = Arc::new(Mutex::new(0));
-    
-    tokio::spawn(async move {
-        let mut num = data.lock().unwrap();
-        *num += 1;
-        
-        // ❌ 编译错误！
-      //  tokio::time::sleep(Duration::from_secs(1)).await;
-      
-    });
+async fn main() -> io::Result<()> {
+    let mut file = File::create("foo.txt").await?;
+
+    // 由于缓冲区大小限制，写入操作可能不会写入全部数据的
+    let n = file.write(b"some bytesWrote the firstbytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytesWrote the first {} bytes of 'some bytes").await?;
+
+    println!("Wrote the first {} bytes of 'some bytes'.", n);
+    Ok(())
 }
