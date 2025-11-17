@@ -13,7 +13,7 @@ pub struct MyTokio {
 type Task = Pin<Box<dyn Future<Output = ()> + Send>>;
 
 impl MyTokio {
-    fn new() -> MyTokio {
+    pub fn new() -> MyTokio {
         MyTokio {
             tasks: VecDeque::new(),
         }
@@ -27,7 +27,7 @@ impl MyTokio {
         self.tasks.push_back(Box::pin(future));
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         let waker = task::noop_waker();
         let mut cx = Context::from_waker(&waker);
 

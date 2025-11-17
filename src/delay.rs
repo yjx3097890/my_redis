@@ -4,8 +4,8 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 
-struct Delay {
-    when: Instant,
+pub struct Delay {
+    pub when: Instant,
 }
 
 impl Future for Delay {
@@ -24,12 +24,12 @@ impl Future for Delay {
     }
 }
 
-#[tokio::main]
-async fn main() {
-    let when = Instant::now() + std::time::Duration::from_secs(4);
-    let delay = Delay { when };
-    println!("Hello!");
-    let out = delay.await;
-     println!("world!");
-    println!("{}", out);
-}
+// #[tokio::main]
+// async fn main() {
+//     let when = Instant::now() + std::time::Duration::from_secs(4);
+//     let delay = Delay { when };
+//     println!("Hello!");
+//     let out = delay.await;
+//      println!("world!");
+//     println!("{}", out);
+// }
